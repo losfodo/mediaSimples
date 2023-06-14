@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Calculadora de Notas</title>
+  <script src="https://unpkg.com/vue@2.6.14"></script>
+</head>
+<body>
+  <div id="app">
+    <h2>Calculadora de Notas</h2>
+
+    <label for="intelligence">Inteligência:</label>
+    <input type="number" step="0.01" v-model="intelligence"><br>
+
+    <label for="strength">Força:</label>
+    <input type="number" step="0.01" v-model="strength"><br>
+
+    <label for="charm">Charme:</label>
+    <input type="number" step="0.01" v-model="charm"><br>
+
+    <label for="goals">Objetivos:</label>
+    <input type="number" step="0.01" v-model="goals"><br>
+
+    <button @click="calculateAverage">Calcular</button>
+
+    <div v-if="classification !== ''">
+      <div>Classificação: {{ classification }}</div>
+    </div>
+
+    <h3>Histórico de Notas</h3>
+
+    <ul>
+      <li v-for="(entry, index) in history" :key="index">
+        {{ entry.date }}: Média {{ entry.average }} - Classificação: {{ entry.classification }}
+        <button @click="deleteEntry(index)">Excluir</button>
+      </li>
+    </ul>
+
+    <button @click="clearHistory">Limpar Histórico</button>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        intelligence: '',
+        strength: '',
+        charm: '',
+        goals: '',
+        classification: '',
+        history: []
+      },
+      mounted() {
+        this.retrieveData();
+      },
+      methods: {
+        retrieveData() {
+          if (localStorage.getItem('intelligence')) {
+            this.intelligence = localStorage.getItem('intelligence');
+          }
+          if (localStorage.getItem('strength')) {
+            this.strength = localStorage.getItem('strength');
+          }
+          if (localStorage.getItem('charm')) {
+            this.charm = localStorage.getItem('charm');
+          }
+          if (localStorage.getItem('goals')) {
+            this.goals = localStorage.getItem('goals');
+          }
+          if (localStorage.getItem('history')) {
+            this.history = JSON.parse(localStorage.getItem('history'));
+          }
+        },
+        calculateAverage() {
+          localStorage.setItem('intelligence', this.intelligence);
+          localStorage.setItem('strength', this.strength);
+          localStorage.setItem('charm', this.charm);
+          localStorage.setItem('goals', this.goals);
+
+          const intelligence = parseFloat(this.intelligence);
+          const strength = parseFloat(this.strength);
+          const charm = parseFloat(this.charm);
+          const goals = parseFloat(this.goals);
+
+          const average = (intelligence + strength + charm + goals) / 4;
+
+          if (average >= 0 && average <= 2) {
+            this.classification = 'Lixo humano';
+          } else if (average <= 4) {
+            this.classification = 'Patético';
+          } else if (average <= 6) {
+            this.classification = 'Na média apenas um ser humano comum';
+          } else if (average <= 7) {
+            this.classification = 'Foi só um ok nessa vida';
+          } else if (average <= 8) {
+            this.classification = 'Mandou bem';
+          } else if (average <= 9) {
+            this.classification = 'Excelente';
+          } else if (average <= 9.5) {
+            this.classification = 'Gênio';
+          } else if (average <= 10) {
+            this.classification = 'Perfeição';
+          }
+
+          const currentDate = new Date().toLocaleDateString();
+          const entry = {
+            date: currentDate,
+            average: average.toFixed(2),
+            classification: this.classification
+          };
+          this.history.push(entry);
+          localStorage.setItem('history', JSON.stringify(this.history));
+        },
+        deleteEntry(index) {
+          this.history.splice(index, 1);
+          localStorage.setItem('history', JSON.stringify(this.history));
+        },
+        clearHistory() {
+          this.history = [];
+          localStorage.removeItem('history');
+        }
+      }
+    });
+  </script>
+</body>
+</html>
