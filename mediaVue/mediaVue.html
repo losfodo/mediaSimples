@@ -3,6 +3,14 @@
 <head>
   <title>Calculadora de Notas</title>
   <script src="https://unpkg.com/vue@2.6.14"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    #radarChart {
+      width: 400px;
+      height: 400px;
+      margin: 20px auto;
+    }
+  </style>
 </head>
 <body>
   <div id="app">
@@ -26,16 +34,20 @@
       <div>Classificação: {{ classification }}</div>
     </div>
 
+    <!-- <canvas id="radarChart"></canvas> -->
+
     <h3>Histórico de Notas</h3>
 
     <ul>
       <li v-for="(entry, index) in history" :key="index">
-        {{ entry.date }}: Média {{ entry.average }} - Classificação: {{ entry.classification }}
+        {{ entry.date }}: Média {{ entry.average }} - Classificação: {{ entry.classification }} - Int: {{ entry.intelligence }} - For: {{ entry.strength}} - Char: {{ entry.charm }} - Objtv: {{ entry.goals}}
         <button @click="deleteEntry(index)">Excluir</button>
       </li>
     </ul>
 
     <button @click="clearHistory">Limpar Histórico</button>
+
+    <canvas id="radarChart"></canvas>
   </div>
 
   <script>
@@ -47,7 +59,8 @@
         charm: '',
         goals: '',
         classification: '',
-        history: []
+        history: [],
+        radarChart: null
       },
       mounted() {
         this.retrieveData();
@@ -105,18 +118,73 @@
           const entry = {
             date: currentDate,
             average: average.toFixed(2),
-            classification: this.classification
+            classification: this.classification,
+            intelligence: this.intelligence,
+            strength: this.strength,
+            charm: this.charm,
+            goals: this.goals
           };
           this.history.push(entry);
           localStorage.setItem('history', JSON.stringify(this.history));
+
+          this.updateRadarChart();
         },
         deleteEntry(index) {
           this.history.splice(index, 1);
           localStorage.setItem('history', JSON.stringify(this.history));
+
+          this.updateRadarChart();
         },
         clearHistory() {
           this.history = [];
           localStorage.removeItem('history');
+
+          this.updateRadarChart();
+        },
+        updateRadarChart() {
+          if (this.radarChart) {
+            this.radarChart.destroy();
+          }
+
+          const labels = ['Inteligência', 'Força', 'Charme', 'Objetivos'];
+          const data = [parseFloat(this.intelligence), parseFloat(this.strength), parseFloat(this.charm), parseFloat(this.goals)];
+
+          const ctx = document.getElementById('radarChart').getContext('2d');
+          this.radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Notas',
+                data: data,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(75, 192, 192, 1)'
+              },
+              {
+                    label: 'Topo',
+                    data: [10, 0],//dados
+                    backgroundColor: 'rgba(0, 0, 255, .3)',//gera uma fundo azul transparente
+                    borderColor: [
+                        'rgba(0, 0, 255, .3)',
+                    ],
+                    borderWidth: 4
+                }
+            ]
+            },
+            options: {
+              scale: {
+                ticks: {
+                  beginAtZero: true,
+                  max: 10,
+                  min: 0
+                }
+              }
+            }
+          });
         }
       }
     });
